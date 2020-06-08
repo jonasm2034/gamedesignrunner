@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class TriggerNextSpawn : MonoBehaviour
 {
-    public SpawnLevel spawner; // andere Klasse wird reingeladen
+    public SpawnLevel1 spawner; // andere Klasse wird reingeladen
 
     int x = 3;
 
