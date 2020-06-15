@@ -294,8 +294,7 @@ public class PlayerMovement2 : MonoBehaviour {
         
         if (Input.GetKeyDown(KeyCode.R))
         {
-            SceneManager.LoadScene(1);
-            ScoreManager.instance.ResetScore();
+            SceneManager.LoadScene(6);
         }
 
         if (Input.GetKeyDown(KeyCode.Escape))

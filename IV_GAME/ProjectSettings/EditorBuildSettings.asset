@@ -26,4 +26,7 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/scenes/uselessScene.unity
     guid: 96e3aedba61f94d4198d1cdb09e04657
+  - enabled: 1
+    path: Assets/scenes/LevelEditor.unity
+    guid: 4ba641f54bbc4ab44ae65771780ac281
   m_configObjects: {}
