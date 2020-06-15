@@ -1684,8 +1684,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   controller: {fileID: 1795416292}
   follower: {fileID: 1234388958}
-  speedvalue: 35
-  gravity: -35
+  speedvalue: 30
+  gravity: -50
   jumpHeight: 5
   maxgrappledistance: 70
   groundCheck: {fileID: 2086209916}
@@ -1707,6 +1707,7 @@ MonoBehaviour:
   dashTimer: 0
   chargeFactor: 2
   inGrapplingRange: 0
+  hasLanded: 0
 --- !u!4 &1795416291
 Transform:
   m_ObjectHideFlags: 0

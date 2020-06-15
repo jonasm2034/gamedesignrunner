@@ -1611,7 +1611,7 @@ MonoBehaviour:
   controller: {fileID: 2018699274}
   follower: {fileID: 1043463508}
   speedvalue: 30
-  gravity: -40
+  gravity: -50
   jumpHeight: 5
   maxgrappledistance: 70
   groundCheck: {fileID: 1841180839}
