@@ -29,7 +29,6 @@ public class PlayerMovement2 : MonoBehaviour {
     bool hittingWall;
 
     int layerMaskgrapple = 1 << 9;
-    RaycastHit firsthit;
     public RaycastHit grapplePoint;
     public RaycastHit newgrapplePoint;
     public bool isGrappling = false;
@@ -46,7 +45,6 @@ public class PlayerMovement2 : MonoBehaviour {
     public float speed;
     bool pulling = false;
     float originangle;
-    Vector3 jumpOrigin;
 
     public Vector3 runDirection;
     public RaycastHit finalHit;
@@ -56,7 +54,6 @@ public class PlayerMovement2 : MonoBehaviour {
     public Vector3 wallDirection;
     bool wallNearby = false;
     int layerMask = 1 << 10;
-    float grapplerundelay = 0;
     float wallDistance = 2;
     RaycastHit oldHit;
     int rayHit;
@@ -65,19 +62,16 @@ public class PlayerMovement2 : MonoBehaviour {
     bool firstrun;
     public float currentVelocity;
     bool gamestart = false;
-    Vector3 currentDirection;
     float wallrunRotation;
     bool isDashing = false;
     bool reduceSpeed;
     public float dashTimer;
-    bool isSliding;
     float jumpCharge;
     public float chargeFactor = 3f;
     float jumpMercy;
     public bool inGrapplingRange;
     Ray rangeRay;
     RaycastHit rangeCheck;
-    float reRunTimer;
     bool stoppingWallrun;
     float doubleJumpTimer;
     bool doubleSpace;
@@ -85,13 +79,26 @@ public class PlayerMovement2 : MonoBehaviour {
     float landingScale;
     bool landingGrowth;
     float landingVelocity;
-    bool hasLanded;
+    public bool hasLanded;
     float landingTimer;
+    float runDelay;
+    bool justHitWall;
+    bool inAir;
 
-    void stopSliding()
+    void normalState()
     {
-        isSliding = false;
-        transform.localScale = new Vector3(1, 1, 1);
+        if (isGrounded)
+        {
+            landingTimer = 0;
+            newRun = true;
+            jumpMercy = 0;
+            inAir = false;
+        }
+
+        if (!isGrounded)
+        {
+            inAir = true;
+        }
     }
 
     void resetJumpDash()
@@ -114,7 +121,6 @@ public class PlayerMovement2 : MonoBehaviour {
         speed = swingspeed * (1 - angle / 90);
         isGrappling = false;
         upSwing = false;
-        jumpOrigin = transform.position;
     }
 
     void stopWallrun()
@@ -125,7 +131,7 @@ public class PlayerMovement2 : MonoBehaviour {
         newRun = false;
         rayHit = 0;
         velocity.y = currentVelocity;
-        jumpOrigin = transform.position;
+        runDelay = 0.4f;
     }
 
     void getGrappleInformation()
@@ -145,7 +151,6 @@ public class PlayerMovement2 : MonoBehaviour {
 
     void doGrapple()
     {
-        currentDirection = Vector3.Cross(ortho, grapplePoint.point - transform.position);
         angle = Vector3.Angle(transform.position - grapplePoint.point, lowest - grapplePoint.point);
         swingSize = ((swingspeed / (2 * Mathf.PI) / distance) * 360);
         if (angle < 1 && angle > -1 && !upSwing)
@@ -164,14 +169,92 @@ public class PlayerMovement2 : MonoBehaviour {
         }
 
         transform.position = follower.transform.position;
-        if(reRunTimer <= 0)
+    }
+
+    void wallCheck()
+    {
+        Ray ray7 = new Ray(transform.position, Vector3.forward);
+        Ray ray8 = new Ray(transform.position, Vector3.back);
+        Ray ray1 = new Ray(transform.position, Vector3.left);
+        Ray ray2 = new Ray(transform.position, Vector3.right);
+        Ray ray3 = new Ray(transform.position, Vector3.forward - Vector3.left);
+        Ray ray4 = new Ray(transform.position, Vector3.forward - Vector3.right);
+        Ray ray5 = new Ray(transform.position, Vector3.back - Vector3.right);
+        Ray ray6 = new Ray(transform.position, Vector3.back - Vector3.left);
+
+        RaycastHit hit;
+
+
+        if (Physics.Raycast(ray1, out hit, 2f, layerMask) && Vector3.Distance(transform.position, hit.point) < wallDistance)
         {
-            newRun = true;
+            wallDistance = Vector3.Distance(transform.position, hit.point);
+            finalHit = hit;
+            wallNearby = true;
+            rayHit = 1;
         }
-        else
+
+
+        if (Physics.Raycast(ray2, out hit, 2f, layerMask) && Vector3.Distance(transform.position, hit.point) < wallDistance)
         {
-            reRunTimer -= Time.deltaTime;
+            wallDistance = Vector3.Distance(transform.position, hit.point);
+            finalHit = hit;
+            wallNearby = true;
+            rayHit = 2;
         }
+
+
+        if (Physics.Raycast(ray3, out hit, 2f, layerMask) && Vector3.Distance(transform.position, hit.point) < wallDistance)
+        {
+            wallDistance = Vector3.Distance(transform.position, hit.point);
+            finalHit = hit;
+            wallNearby = true;
+            rayHit = 3;
+        }
+
+
+        if (Physics.Raycast(ray4, out hit, 2f, layerMask) && Vector3.Distance(transform.position, hit.point) < wallDistance)
+        {
+            wallDistance = Vector3.Distance(transform.position, hit.point);
+            finalHit = hit;
+            wallNearby = true;
+            rayHit = 4;
+        }
+
+
+        if (Physics.Raycast(ray5, out hit, 2f, layerMask) && Vector3.Distance(transform.position, hit.point) < wallDistance)
+        {
+            wallDistance = Vector3.Distance(transform.position, hit.point);
+            finalHit = hit;
+            wallNearby = true;
+            rayHit = 5;
+        }
+
+
+        if (Physics.Raycast(ray6, out hit, 2f, layerMask) && Vector3.Distance(transform.position, hit.point) < wallDistance)
+        {
+            wallDistance = Vector3.Distance(transform.position, hit.point);
+            finalHit = hit;
+            wallNearby = true;
+            rayHit = 6;
+        }
+
+        if (Physics.Raycast(ray7, out hit, 2f, layerMask) && Vector3.Distance(transform.position, hit.point) < wallDistance)
+        {
+            wallDistance = Vector3.Distance(transform.position, hit.point);
+            finalHit = hit;
+            wallNearby = true;
+            rayHit = 7;
+        }
+
+        if (Physics.Raycast(ray8, out hit, 2f, layerMask) && Vector3.Distance(transform.position, hit.point) < wallDistance)
+        {
+            wallDistance = Vector3.Distance(transform.position, hit.point);
+            finalHit = hit;
+            wallNearby = true;
+            rayHit = 8;
+        }
+
+
     }
     void doWallrun()
     {
@@ -179,33 +262,27 @@ public class PlayerMovement2 : MonoBehaviour {
         wallDirection = finalHit.point - transform.position;
         if (Vector3.Angle(transform.forward.normalized, Vector3.Cross(finalHit.normal, Vector3.up)) < 90 && firstrun == true)
         {
+            hasLanded = true;
             leftrighttest = -1;
         }
 
         if (Vector3.Angle(transform.forward.normalized, Vector3.Cross(finalHit.normal, Vector3.up)) > 89 && firstrun == true)
         {
+            hasLanded = true;
             leftrighttest = 1;
         }
-        //transform.eulerAngles = new Vector3(0, transform.eulerAngles.y, 0);
 
         if (wallrunRotation < 0.1f)
         {
            wallrunRotation += Time.deltaTime;
            transform.rotation = Quaternion.FromToRotation(transform.up, (5*Vector3.up + wallrunRotation * 10 * finalHit.normal).normalized) * transform.rotation;
         }
-        //else
-        //{
 
-        //    transform.rotation = Quaternion.FromToRotation(transform.up, (3 * Vector3.up + finalHit.normal).normalized) * transform.rotation;
-        //}
         runDirection = Vector3.Cross(finalHit.normal, Vector3.up) * leftrighttest;
         transform.position = follower.transform.position;
+        firstrun = false;
     }
 
-    void landing()
-    {
-        transform.localScale = new Vector3(1, landingScale, 1);
-    }
 
     private void Awake()
     {
@@ -235,59 +312,58 @@ public class PlayerMovement2 : MonoBehaviour {
 
         if (gamestart)
         {
-            Debug.Log(wallRunning);
+            wallNearby = false;
+            //if (landingTimer >= 1 && !isGrounded)
+            //{
+            //    isLanding = true;
+            //}
+            //if (!isGrounded && !isLanding)
+            //{
+            //    landingTimer += Time.deltaTime * 3f;
+            //}
+            //if(isLanding && !isGrounded)
+            //{
+            //    landingVelocity = velocity.y;
+            //}
 
-            if (landingTimer >= 1 && !isGrounded)
-            {
-                isLanding = true;
-            }
-            if (!isGrounded && !isLanding)
-            {
-                landingTimer += Time.deltaTime * 3f;
-            }
-            if(isLanding && !isGrounded)
-            {
-                landingVelocity = velocity.y;
-            }
+            //if(isLanding && isGrounded)
+            //{
+            //    hasLanded = true;
+            //    isLanding = false;
+            //    landingScale = 1 - (-landingVelocity / 60);
+            //    landingGrowth = true;
 
-            if(isLanding && isGrounded)
-            {
-                hasLanded = true;
-                isLanding = false;
-                landingScale = 1 - (-landingVelocity / 60);
-                landingGrowth = true;
+            //    if(landingVelocity > -1)
+            //    {
+            //        hasLanded = false;
+            //    }
 
-                if(landingVelocity > -1)
-                {
-                    hasLanded = false;
-                }
+            //    if(landingVelocity < -54)
+            //    {
+            //        landingScale = 0.1f;
+            //    }
+            //}
 
-                if(landingVelocity < -54)
-                {
-                    landingScale = 0.1f;
-                }
-            }
-
-            if(hasLanded)
-            {
+            //if(hasLanded)
+            //{
               
-                if (landingGrowth)
-                {
-                    if(landingScale < 1f)
-                    {
-                        landingScale += Time.deltaTime * 3f;
-                    }
+            //    if (landingGrowth)
+            //    {
+            //        if(landingScale < 1f)
+            //        {
+            //            landingScale += Time.deltaTime * 3f;
+            //        }
 
-                    transform.localScale = new Vector3(1, landingScale, 1);
+            //        transform.localScale = new Vector3(1, landingScale, 1);
 
-                    if (landingScale >= 1)
-                    {
-                        transform.localScale = new Vector3(1, 1, 1);
-                        hasLanded = false;
-                        landingGrowth = false;
-                    }
-                }
-            }
+            //        if (landingScale >= 1)
+            //        {
+            //            transform.localScale = new Vector3(1, 1, 1);
+            //            hasLanded = false;
+            //            landingGrowth = false;
+            //        }
+            //    }
+            //}
 
 
             if (Input.GetButton("Jump") && !isGrappling && !wallRunning)
@@ -311,88 +387,25 @@ public class PlayerMovement2 : MonoBehaviour {
                 dashTimer -= Time.deltaTime;
             }
 
-            Ray ray7 = new Ray(transform.position, Vector3.forward);
-            Ray ray8 = new Ray(transform.position, Vector3.back);
-            Ray ray1 = new Ray(transform.position, Vector3.left);
-            Ray ray2 = new Ray(transform.position, Vector3.right);
-            Ray ray3 = new Ray(transform.position, Vector3.forward - Vector3.left);
-            Ray ray4 = new Ray(transform.position, Vector3.forward - Vector3.right);
-            Ray ray5 = new Ray(transform.position, Vector3.back - Vector3.right);
-            Ray ray6 = new Ray(transform.position, Vector3.back - Vector3.left);
-
-            RaycastHit hit;
-
-            if (Physics.Raycast(ray1, out hit, 2f, layerMask) && Vector3.Distance(transform.position, hit.point) < wallDistance)
+            if(wallNearby)
             {
-                wallDistance = Vector3.Distance(transform.position, hit.point);
-                finalHit = hit;
-                wallNearby = true;
-                rayHit = 1;
+                justHitWall = true;
+            }
+            if (runDelay <= 0)
+            {
+                wallCheck();
+            }
+            else
+            {
+                runDelay -= Time.deltaTime;
             }
 
-
-            if (Physics.Raycast(ray2, out hit, 2f, layerMask) && Vector3.Distance(transform.position, hit.point) < wallDistance)
+            if(justHitWall && !wallNearby)
             {
-                wallDistance = Vector3.Distance(transform.position, hit.point);
-                finalHit = hit;
-                wallNearby = true;
-                rayHit = 2;
+              
+                justHitWall = false;
             }
 
-
-            if (Physics.Raycast(ray3, out hit, 2f, layerMask) && Vector3.Distance(transform.position, hit.point) < wallDistance)
-            {
-                wallDistance = Vector3.Distance(transform.position, hit.point);
-                finalHit = hit;
-                wallNearby = true;
-                rayHit = 3;
-            }
-
-
-            if (Physics.Raycast(ray4, out hit, 2f, layerMask) && Vector3.Distance(transform.position, hit.point) < wallDistance)
-            {
-                wallDistance = Vector3.Distance(transform.position, hit.point);
-                finalHit = hit;
-                wallNearby = true;
-                rayHit = 4;
-            }
-
-
-            if (Physics.Raycast(ray5, out hit, 2f, layerMask) && Vector3.Distance(transform.position, hit.point) < wallDistance)
-            {
-                wallDistance = Vector3.Distance(transform.position, hit.point);
-                finalHit = hit;
-                wallNearby = true;
-                rayHit = 5;
-            }
-
-
-            if (Physics.Raycast(ray6, out hit, 2f, layerMask) && Vector3.Distance(transform.position, hit.point) < wallDistance)
-            {
-                wallDistance = Vector3.Distance(transform.position, hit.point);
-                finalHit = hit;
-                wallNearby = true;
-                rayHit = 6;
-            }
-
-            if (Physics.Raycast(ray7, out hit, 2f, layerMask) && Vector3.Distance(transform.position, hit.point) < wallDistance)
-            {
-                wallDistance = Vector3.Distance(transform.position, hit.point);
-                finalHit = hit;
-                wallNearby = true;
-                rayHit = 7;
-            }
-
-            if (Physics.Raycast(ray8, out hit, 2f, layerMask) && Vector3.Distance(transform.position, hit.point) < wallDistance)
-            {
-                wallDistance = Vector3.Distance(transform.position, hit.point);
-                finalHit = hit;
-                wallNearby = true;
-                rayHit = 8;
-
-            }
-
-            //Debug.Log(wallNearby);
             if (isGrappling && wallNearby)
             {
                 cancelGrapple();
@@ -421,12 +434,12 @@ public class PlayerMovement2 : MonoBehaviour {
             }
  
 
-            if (speed > speedvalue && !isGrappling && !isSliding)
+            if (speed > speedvalue && !isGrappling)
             {
                 speed -= 4 * Time.deltaTime;
             }
 
-            if (speed < speedvalue && !isGrappling && !isSliding)
+            if (speed < speedvalue && !isGrappling)
 
             {
                 speed += 10 * Time.deltaTime;
@@ -440,32 +453,10 @@ public class PlayerMovement2 : MonoBehaviour {
                 dashTimer = 6; // HIER DASHTIMER UMSTELLEN
                 velocity.y = 1;
             }
-            if (Input.GetKeyDown(KeyCode.LeftControl) && isGrounded && !isSliding)
-            {
-                //transform.RotateAround(transform.position, Vector3.Cross(transform.forward, Vector3.up), 20);
-                isSliding = true;
-                transform.localScale = new Vector3(1, 0.2f, 1);
-            }
-            if (isSliding)
-            {
-                speed -= 15 * Time.deltaTime;
-            }
-
-            if(Input.GetKeyUp(KeyCode.LeftControl) && isSliding)
-            {
-                stopSliding();
-            }
-
-            if (Input.GetButtonDown("Jump") && isSliding)
-            {
-                stopSliding();
-            }
-
+        
             if (isGrounded)
             {
-                landingTimer = 0;
-                newRun = true;
-                jumpMercy = 0;
+                normalState();
             }
 
             if (isGrounded && velocity.y < 0)
@@ -474,11 +465,6 @@ public class PlayerMovement2 : MonoBehaviour {
             }
 
             float x = Input.GetAxis("Horizontal");
-
-            //if (isGrappling && velocity.y < 0)
-            //{
-            //    velocity.y = -2f;
-            //}
 
             if (wallRunning && velocity.y < 0)
             {
@@ -509,14 +495,12 @@ public class PlayerMovement2 : MonoBehaviour {
                 velocity.y = Mathf.Sqrt(jumpHeight * - 4f * gravity);
                 doubleJumping = true;
                 speed = speed * 1/5;
-                jumpOrigin = transform.position;
                 jumpCharge = 0;
             }
 
             if (Input.GetButtonUp("Jump") && jumpMercy <= 0.15f)
             {
                 velocity.y = Mathf.Sqrt(jumpHeight * (0.8f + chargeFactor * jumpCharge) * -2f * gravity);
-                jumpOrigin = transform.position;
                 jumpCharge = 0;
                 doubleSpace = true;
                 
@@ -574,7 +558,6 @@ public class PlayerMovement2 : MonoBehaviour {
                 speed = swingspeed * (1 - angle / 90);
                 isGrappling = false;
                 upSwing = false;
-                jumpOrigin = transform.position;
             }
 
             ////if (isGrappling && angle >= 85)
@@ -607,7 +590,7 @@ public class PlayerMovement2 : MonoBehaviour {
             
 
 
-            if (Input.GetMouseButtonDown(1) && !isGrappling && !pulling && grapplerundelay <= 0)
+            if (Input.GetMouseButtonDown(1) && !isGrappling && !pulling)
             {
                 if (Physics.Raycast(ray, out grapplePoint, maxgrappledistance, layerMaskgrapple))
                 {
@@ -616,7 +599,6 @@ public class PlayerMovement2 : MonoBehaviour {
                     if (wallRunning)
                     {
                         stopWallrun();
-                        reRunTimer = 0.3f;
                     }
                 }
             }
@@ -627,34 +609,10 @@ public class PlayerMovement2 : MonoBehaviour {
             }
 
 
-            //if (isGrappling)
-            //{
-            //    Ray rayObstacle = new Ray(transform.position, grapplePoint.point);
-            //    if (Physics.Raycast(rayObstacle, out newgrapplePoint, distance - 5))
-            //    {
-            //        grapplePoint = newgrapplePoint;
-            //        origin = transform.position;
-            //        rayExtender.Set(grapplePoint.point.x, origin.y, grapplePoint.point.z);
-            //        var mirrorVector = (origin - rayExtender);
-            //        swingTarget = rayExtender - mirrorVector;
-            //        lowest = new Vector3(grapplePoint.point.x, grapplePoint.point.y - (Vector3.Distance(grapplePoint.point, transform.position)), grapplePoint.point.z);
-            //        distance = Vector3.Distance(grapplePoint.point, transform.position);
-            //        ortho = Vector3.Cross(grapplePoint.point - transform.position, swingTarget - transform.position);
-            //        angle = Vector3.Angle(transform.position - grapplePoint.point, lowest - grapplePoint.point);
-            //    }
-            //    Debug.DrawLine(transform.position, grapplePoint.point);
-            //    Debug.Log(grapplePoint.point);
-            //}
-
-            //Debug.DrawLine();
-
             if (isGrappling)
             {
                 doGrapple();
             }
-
-
-
 
 
             if (!wallRunning && newRun && !isGrounded && wallNearby)
@@ -668,7 +626,7 @@ public class PlayerMovement2 : MonoBehaviour {
             if (wallRunning && oldRayHit != rayHit)
             {
 
-                if (Vector3.Magnitude(Vector3.Cross(oldHit.normal, finalHit.normal)) != 0) //&& Vector3.Angle(oldHit.normal, finalHit.normal) < 0 && Vector3.Angle(oldHit.normal, finalHit.normal) > 46)
+                if (Vector3.Magnitude(Vector3.Cross(oldHit.normal, finalHit.normal)) != 0)
                 {
                     oldRayHit = rayHit;
                     oldHit = finalHit;
@@ -686,14 +644,8 @@ public class PlayerMovement2 : MonoBehaviour {
 
             if (wallRunning && Input.GetButtonDown("Jump"))
             {
-                stoppingWallrun = true;
-                wallRunning = false;
-                newRun = false;
-                rayHit = 0;
-                velocity.y = currentVelocity + Mathf.Sqrt(jumpHeight * -2f * gravity); ;
-                wallrunRotation = 0;
-                jumpOrigin = transform.position;
-                jumpCharge = 0;
+                stopWallrun();
+                velocity.y = currentVelocity + Mathf.Sqrt(jumpHeight * -2f * gravity);
                 doubleSpace = true;
             }
 
@@ -702,24 +654,14 @@ public class PlayerMovement2 : MonoBehaviour {
                 stopWallrun();
             }
 
-            if (wallRunning && currentVelocity <= -speed)
-            {
-                stopWallrun();
-            }
-
-            if (wallRunning && currentVelocity <= -speed)
-            {
-                stopWallrun();
-            }
-
-            if (stoppingWallrun && wallrunRotation < 1f)
+            if (stoppingWallrun && wallrunRotation < 0.1f)
             {
                 wallrunRotation += Time.deltaTime * 0.5f;
                 transform.rotation = Quaternion.FromToRotation(transform.up, Vector3.up * wallrunRotation + transform.up) * transform.rotation;
             }
 
 
-            if (stoppingWallrun && wallrunRotation >= 1f)
+            if (stoppingWallrun && wallrunRotation >= 0.1f)
             {
                 stoppingWallrun = false;
                 transform.rotation = Quaternion.FromToRotation(transform.up, Vector3.up) * transform.rotation;
@@ -732,23 +674,14 @@ public class PlayerMovement2 : MonoBehaviour {
                 doWallrun();
             }
 
-            if (grapplerundelay > 0)
-            {
-                grapplerundelay -= Time.deltaTime;
-            }
-            else
-            {
-                grapplerundelay = 0;
-            }
-
             wallDistance = 2f;
-            wallNearby = false;
-            firstrun = false;
+            //firstrun = false;
 
             if(!stoppingWallrun && !wallRunning)
             {
                 newRun = true;
             }
+           
         }
 
     }
